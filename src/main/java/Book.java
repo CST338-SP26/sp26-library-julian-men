@@ -1,3 +1,7 @@
+
+import java.time.LocalDate;
+import java.util.Objects;
+
 /**
  * This class represents a book in the library.
  * It stores information about the book and lets us
@@ -8,7 +12,6 @@
  * @since   2026-03-26
  */
 
-import java.time.LocalDate;
 
 public class Book {
     static final int ISBN_ = 0;
@@ -34,11 +37,33 @@ public class Book {
         this.dueDate = dueDate;
     }
 
-    public String getIsbn() {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Book book = (Book) o;
+        return pageCount == book.pageCount &&
+                Objects.equals(isbn, book.isbn) &&
+                Objects.equals(title, book.title) &&
+                Objects.equals(subject, book.subject) &&
+                Objects.equals(author, book.author);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(isbn, title, subject, pageCount, author);
+    }
+
+    @Override
+    public String toString() {
+        return title + " by " + author + " ISBN: " + isbn;
+    }
+
+    public String getISBN() {
         return isbn;
     }
 
-    public void setIsbn(String isbn) {
+    public void setISBN(String isbn) {
         this.isbn = isbn;
     }
 
@@ -81,4 +106,6 @@ public class Book {
     public void setDueDate(LocalDate dueDate) {
         this.dueDate = dueDate;
     }
+
+
 }
