@@ -105,4 +105,147 @@ public class Library {
         return Code.UNKNOWN_ERROR;
     }
 
+    /**
+     * Reads the CSV file and sets up all books, shelves, and readers.
+     *
+     * @param filename the path to the CSV file
+     * @return Code.SUCCESS if everything loaded, or an error code if something failed
+     */
+    public Code init(String filename) {
+        Scanner scan;
+        try {
+            scan = new Scanner(new FileReader(filename));
+        } catch (FileNotFoundException e) {
+            return Code.FILE_NOT_FOUND_ERROR;
+        }
+
+        // parse books
+        int bookCount = convertInt(scan.nextLine(), Code.BOOK_COUNT_ERROR);
+        if (bookCount < 0) {
+            return errorCode(bookCount);
+        }
+        Code result = initBooks(bookCount, scan);
+        if (result != Code.SUCCESS) {
+            return result;
+        }
+        listBooks();
+
+        // parse shelves
+        int shelfCount = convertInt(scan.nextLine(), Code.SHELF_COUNT_ERROR);
+        if (shelfCount < 0) {
+            return errorCode(shelfCount);
+        }
+        result = initShelves(shelfCount, scan);
+        if (result != Code.SUCCESS) {
+            return result;
+        }
+        listShelves();
+
+        // parse readers
+        int readerCount = convertInt(scan.nextLine(), Code.READER_COUNT_ERROR);
+        if (readerCount < 0) {
+            return errorCode(readerCount);
+        }
+        result = initReader(readerCount, scan);
+        if (result != Code.SUCCESS) {
+            return result;
+        }
+        listReaders();
+
+        return Code.SUCCESS;
+    }
+
+    /**
+     * Reads books from the scanner and adds them to the library.
+     *
+     * @param bookCount the number of books to read
+     * @param scan      the scanner positioned at the first book record
+     * @return Code.SUCCESS if all books loaded, or an error code if something failed
+     */
+    private Code initBooks(int bookCount, Scanner scan) {
+        if (bookCount < 1) {
+            return Code.LIBRARY_ERROR;
+        }
+        for (int i = 0; i < bookCount; i++) {
+            String[] fields = scan.nextLine().split(",");
+            if (fields.length < Book.DUE_DATE_ + 1) {
+                return Code.BOOK_RECORD_COUNT_ERROR;
+            }
+            int pageCount = convertInt(fields[Book.PAGE_COUNT_], Code.PAGE_COUNT_ERROR);
+            if (pageCount <= 0) {
+                return Code.PAGE_COUNT_ERROR;
+            }
+            LocalDate dueDate = convertDate(fields[Book.DUE_DATE_], Code.DATE_CONVERSION_ERROR);
+            if (dueDate == null) {
+                return Code.DATE_CONVERSION_ERROR;
+            }
+            Book book = new Book(
+                    fields[Book.ISBN_],
+                    fields[Book.TITLE_],
+                    fields[Book.SUBJECT_],
+                    pageCount,
+                    fields[Book.AUTHOR_],
+                    dueDate
+            );
+            addBook(book);
+        }
+        return Code.SUCCESS;
+    }
+
+    /**
+     * Reads shelves from the scanner and adds them to the library.
+     *
+     * @param shelfCount the number of shelves to read
+     * @param scan       the scanner positioned at the first shelf record
+     * @return Code.SUCCESS if all shelves loaded, or an error code if something failed
+     */
+    private Code initShelves(int shelfCount, Scanner scan) {
+        if (shelfCount < 1) {
+            return Code.SHELF_COUNT_ERROR;
+        }
+        for (int i = 0; i < shelfCount; i++) {
+            String[] fields = scan.nextLine().split(",");
+            int shelfNumber = convertInt(fields[Shelf.SHELF_NUMBER_], Code.SHELF_NUMBER_PARSE_ERROR);
+            if (shelfNumber < 0) {
+                return Code.SHELF_NUMBER_PARSE_ERROR;
+            }
+            addShelf(fields[Shelf.SUBJECT_]);
+        }
+        if (shelves.size() != shelfCount) {
+            System.out.println("Number of shelves doesn't match expected");
+            return Code.SHELF_NUMBER_PARSE_ERROR;
+        }
+        return Code.SUCCESS;
+    }
+
+    private Code initReader(int readerCount, Scanner scan) {
+        if (readerCount <= 0) {
+            return Code.READER_COUNT_ERROR;
+        }
+        for (int i = 0; i < readerCount; i++) {
+            String[] fields = scan.nextLine().split(",");
+            int cardNumber = convertInt(fields[Reader.CARD_NUMBER_], Code.READER_COUNT_ERROR);
+            Reader reader = new Reader(cardNumber, fields[Reader.NAME_], fields[Reader.PHONE_]);
+            addReader(reader);
+            int bookCount = convertInt(fields[Reader.BOOK_COUNT_], Code.BOOK_COUNT_ERROR);
+            for (int j = 0; j < bookCount; j++) {
+                int isbnIndex = Reader.BOOK_START_ + (j * 2);
+                int dateIndex = isbnIndex + 1;
+                if (dateIndex >= fields.length) {
+                    break;
+                }
+                Book book = getBookByISBN(fields[isbnIndex]);
+                if (book == null) {
+                    System.out.println("ERROR");
+                    continue;
+                }
+                LocalDate dueDate = convertDate(fields[dateIndex], Code.DATE_CONVERSION_ERROR);
+                book.setDueDate(dueDate);
+                checkOutBook(reader, book);
+            }
+        }
+        return Code.SUCCESS;
+    }
+
+
 }
