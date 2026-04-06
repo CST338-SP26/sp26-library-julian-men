@@ -86,4 +86,56 @@ public class Shelf {
         return shelfNumber + " : " + subject;
     }
 
+    public int getBookCount(Book book) {
+        if (!books.containsKey(book)) {
+            return -1;
+        }
+        return books.get(book);
+    }
+
+
+    public Code addBook(Book book) {
+        if (books.containsKey(book)) {
+            books.put(book, books.get(book) + 1);
+            System.out.println(book + " added to shelf " + this);
+            return Code.SUCCESS;
+        }
+        if (book.getSubject().equals(subject)) {
+            books.put(book, 1);
+            System.out.println(book + " added to shelf " + this);
+            return Code.SUCCESS;
+        }
+        return Code.SHELF_SUBJECT_MISMATCH_ERROR;
+    }
+
+
+    public Code removeBook(Book book) {
+        if (!books.containsKey(book)) {
+            System.out.println(book.getTitle() + " is not on shelf " + subject);
+            return Code.BOOK_NOT_IN_INVENTORY_ERROR;
+        }
+        if (books.get(book) <= 0) {
+            System.out.println("No copies of " + book.getTitle() + " remain on shelf " + subject);
+            return Code.BOOK_NOT_IN_INVENTORY_ERROR;
+        }
+        books.put(book, books.get(book) - 1);
+        System.out.println(book.getTitle() + " successfully removed from shelf " + subject);
+        return Code.SUCCESS;
+    }
+
+
+    public String listBooks() {
+        int total = 0;
+        StringBuilder sb = new StringBuilder();
+        for (int count : books.values()) {
+            total += count;
+        }
+        String bookWord = total == 1 ? "book" : "books";
+        sb.append(total).append(" ").append(bookWord).append(" on shelf: ").append(this).append("\n");
+        for (Book book : books.keySet()) {
+            sb.append(book).append(" ").append(books.get(book)).append("\n");
+        }
+        return sb.toString();
+    }
+
 }
