@@ -1,4 +1,4 @@
-
+import Utilities.Code;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -26,6 +26,7 @@ public class Shelf {
 
     @Deprecated
     public Shelf() {
+        books = new HashMap<>();
     }
 
     /**
